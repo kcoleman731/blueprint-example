@@ -1,21 +1,30 @@
 #!/usr/bin/env node
 import 'source-map-support/register';
 import * as cdk from '@aws-cdk/core';
-import { EksWestStack } from '../lib/eks-west-stack';
+import * as ssp from '@shapirov/cdk-eks-blueprint'
+
+import { AdminTeam } from '../lib/teams/admin-team'
 
 const app = new cdk.App();
-new EksWestStack(app, 'EksWestStack', {
-  /* If you don't specify 'env', this stack will be environment-agnostic.
-   * Account/Region-dependent features and context lookups will not work,
-   * but a single synthesized template can be deployed anywhere. */
 
-  /* Uncomment the next line to specialize this stack for the AWS Account
-   * and Region that are implied by the current CLI configuration. */
-  // env: { account: process.env.CDK_DEFAULT_ACCOUNT, region: process.env.CDK_DEFAULT_REGION },
+// Setup platform team
+const platformTeam = new AdminTeam()
+const teams: Array<ssp.Team> = [platformTeam];
 
-  /* Uncomment the next line if you know exactly what Account and Region you
-   * want to deploy the stack to. */
-  // env: { account: '123456789012', region: 'us-east-1' },
+// AddOns for the cluster.
+const addOns: Array<ssp.ClusterAddOn> = [
+    new ssp.NginxAddOn,
+    new ssp.ArgoCDAddOn,
+    new ssp.CalicoAddOn,
+    new ssp.MetricsServerAddOn,
+    new ssp.ClusterAutoScalerAddOn,
+    new ssp.ContainerInsightsAddOn,
+];
 
-  /* For more information, see https://docs.aws.amazon.com/cdk/latest/guide/environments.html */
+const id = 'eks-blueprint-west-1'
+new ssp.EksBlueprint(app, { id, addOns, teams }, {
+    env: {
+        region: 'us-west-1',
+        account: account
+    }
 });
